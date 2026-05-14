@@ -8,13 +8,13 @@ const AttendanceStats = ({history}) => {
 
     const stats = [
         {
-            label: "Days Present", value: totalPresent, icon: CalendarIcon
+            label: "Present Days", value: totalPresent, icon: CalendarIcon
         },
         {
-            label: "Late Arrivals", value: totalLate, icon: AlertCircleIcon
+            label: "Late Check-ins", value: totalLate, icon: AlertCircleIcon
         },
         {
-            label: "Avg. Work Hrs", value: "8.5 Hrs", icon: ClockIcon
+            label: "Average Work Hours", value: "8.5 Hrs", icon: ClockIcon
         },
     ]
   return (
