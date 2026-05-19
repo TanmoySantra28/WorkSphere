@@ -15,5 +15,5 @@ app.use(multer().none())
 //Routes
 app.get("/", (req, res)=> res.send("Server is running"))
 
-await connectDB()
+await connectDB() 
 app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`))
