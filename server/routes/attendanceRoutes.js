@@ -6,4 +6,4 @@ const attendanceRouter = Router();
 attendanceRouter.post('/', protect, clockInOut)
 attendanceRouter.get('/', protect, getAttendance)
 
-export default attendanceRouter;
+export default attendanceRouter; 
