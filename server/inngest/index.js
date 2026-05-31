@@ -37,8 +37,13 @@ const autoCheckOut = inngest.createFunction(
           body: `<div style="max-width: 600px;">
                     <h2>Hi ${employee.firstName}, 👋</h2>
                     <p style="font-size: 16px;">You have a check-in in ${employee.department} today:</p>
-                    <p style="font-size: 18px; font-weight: bold; color: #007bff; margin: 8px 0;">${attendance?.checkIn?.toLocaleTimeString()}</p>
-                    <p style="font-size: 16px;">Please make sure to check-out in one hour.</p>
+                    <p style="font-size: 18px; font-weight: bold; color: #007bff; margin: 8px 0;">${new Date(attendance.checkIn).toLocaleTimeString("en-IN", {
+                        timeZone: "Asia/Kolkata",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                        })}</p>
+                    <p style="font-size: 16px;">You have been checked in for over 9 hours. Please check out to complete your attendance.</p>
                     <p style="font-size: 16px;">If you have any questions, please contact your admin.</p>
                     <br />
                     <p style="font-size: 16px;">Best Regards,</p>
@@ -51,9 +56,10 @@ const autoCheckOut = inngest.createFunction(
 
         attendance = await Attendance.findById(attendanceId)
         if(!attendance?.checkOut){
-            attendance.checkOut = new Date(new Date(attendance.checkIn).getTime() + 4 * 60 * 60 * 1000);
-            attendance.workingHours = 4;
-            attendance.dayType = "Half Day";
+            attendance.checkOut = new Date(
+            new Date(attendance.checkIn).getTime() + 10 * 60 * 60 * 1000);
+            attendance.workingHours = 10;
+            attendance.dayType = "Full Day";
             attendance.status = "LATE";
             await attendance.save();
         }
@@ -106,7 +112,7 @@ const attendaceReminderCron = inngest.createFunction(
     id: "attendance-reminder-cron",
     triggers: [
       {
-        cron: "TZ=Asia/Kolkata 39 11 * * *", // 06:00 UTC = 11:30 AM IST
+        cron: "TZ=Asia/Kolkata 30 11 * * *", // 06:00 UTC = 11:30 AM IST
       },
     ],
   },
@@ -151,28 +157,27 @@ const attendaceReminderCron = inngest.createFunction(
         // step 6: send reminder emails
         if(absentEmployees.length > 0){
             await step.run("send-reminder-emails", async()=>{
-                const emailPromises = absentEmployees.map((emp)=>{
-                    // send email
-                    sendEmail({
-                      to: emp.email,
-                      subject: `Attendance Reminder - Please Mark Your Attendance`,
-                      body: `<div style="max-width: 600px; font-family: Arial, sans-serif;">
-                                <h2>Hi ${emp.firstName}, 👋</h2>
-                                <p style="font-size: 16px;">We noticed you haven't marked your attendance yet today.</p>
-                                <p style="font-size: 16px;">The deadline was <strong>11:30 AM</strong> and your attendance is still missing.</p>
-                                <p style="font-size: 16px;">Please check in as soon as possible or contact your admin if you're facing any issues.</p>
-                                <br />
-                                <p style="font-size: 14px; color: #666;">Department: ${emp.department}</p>
-                                <br />
-                                <p style="font-size: 16px;">Best Regards,</p>
-                                <p style="font-size: 16px;"><strong>WorkSphere</strong></p>
-                            </div>`
-                    })
-
+                const emailPromises = absentEmployees.map((emp) =>
+                sendEmail({
+                  to: emp.email,
+                  subject: `Attendance Reminder - Please Mark Your Attendance`,
+                  body: `<div style="max-width: 600px; font-family: Arial, sans-serif;">
+                            <h2>Hi ${emp.firstName}, 👋</h2>
+                            <p style="font-size: 16px;">We noticed you haven't marked your attendance yet today.</p>
+                            <p style="font-size: 16px;">The deadline was <strong>11:30 AM</strong> and your attendance is still missing.</p>
+                            <p style="font-size: 16px;">Please check in as soon as possible or contact your admin if you're facing any issues.</p>
+                            <br />
+                            <p style="font-size: 14px; color: #666;">Department: ${emp.department}</p>
+                            <br />
+                            <p style="font-size: 16px;">Best Regards,</p>
+                            <p style="font-size: 16px;"><strong>WorkSphere</strong></p>
+                        </div>`
                 })
+            );
+
             })
         }
-
+        await Promise.all(emailPromises);
         return {totalActive: activeEmployees.length, onLeave: onLeaveIds.length, checkedIn: checkedInIds.length, absent: absentEmployees.length}
     }
 );

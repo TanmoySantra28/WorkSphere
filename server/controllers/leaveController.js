@@ -31,7 +31,7 @@ export const createLeave = async (req, res) => {
         }
 
         const leave = await LeaveApplication.create({
-            employeeid: employee._id,
+            employeeId: employee._id,
             type,
             startDate: new Date(startDate),
             endDate: new Date(endDate),
@@ -47,28 +47,30 @@ export const createLeave = async (req, res) => {
         return res.json({success: true, data: leave});
 
     } catch (error) {
-        return res.status(500).json({ error: "Failed"});
-        
-    }
+    console.error(error);
+    return res.status(500).json({
+        error: error.message
+    });
+}
 }
 
 // Get leave
 // GET /api/leaves
 export const getLeaves = async (req, res) => {
     try {
-        const session = eq.session;
+        const session = req.session;
         const isAdmin = session.role === "ADMIN";
         if(isAdmin) {
             const status = req.query.status;
             const where = status ? {status} : {};
-            const leaves = (await LeaveApplication.find(where).populate("employeeId")).sort({ createdAt: -1});
+            const leaves = await LeaveApplication.find(where).populate("employeeId").sort({ createdAt: -1 });
             const data = leaves.map((l) => {
                 const obj = l.toObject();
                 return {
                     ...obj,
                     id: obj._id.toString(),
-                    employee: obj.employeeid,
-                    employeeid: obj.employeeid?._id?.toString(),
+                    employee: obj.employeeId,
+                    employeeId: obj.employeeId?._id?.toString(),
                 }
             })
             return res.json({data})
@@ -78,7 +80,7 @@ export const getLeaves = async (req, res) => {
             }).lean();
             if(!employee) return res.status(404).json({error: "Not found"});
             const leaves = await LeaveApplication.find({
-                employeeid: employee._id
+                employeeId: employee._id
             }).sort({createdAt: -1});
             return res.json({
                 data: leaves,
@@ -87,8 +89,11 @@ export const getLeaves = async (req, res) => {
         }
         
     } catch (error) {
-        return res.status(500).json({ error: "Failed"});
-    }
+    console.error(error);
+    return res.status(500).json({
+        error: error.message
+    });
+}
 }
 
 // Update leave
@@ -102,7 +107,10 @@ export const updateLeaveStatus = async (req, res) => {
         const leave = await LeaveApplication.findByIdAndUpdate(req.params.id, {status}, {returnDocument: "after"})
         return res.json({success: true, data: leave})
     } catch (error) {
-        return res.status(500).json({ error: "Failed"});
-    }
+    console.error(error);
+    return res.status(500).json({
+        error: error.message
+    });
+}
     
 }
