@@ -67,7 +67,8 @@ export const changePassword = async (req, res) => {
         const isValid = await bcrypt.compare(currentPassword, user.password);
         if(!isValid) return res.status(400).json({error: "Current password is incorrext"});
         const hashed = await bcrypt.hash(newPassword, 10);
-        await user.findByIdAndUpdate(session.userId, {password: hashed})
+        user.password = hashed;
+        await user.save();
         return res.json({success: true});
     } catch (error) {
         return res.status(500).json({ error: "Failed to change password"});

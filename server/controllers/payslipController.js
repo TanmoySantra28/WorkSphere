@@ -44,7 +44,7 @@ export const getPayslips = async (req, res) => {
                 return {
                     ...obj,
                     id: obj._id.toString(),
-                    employee: obj.employeeId?._id?.toString(),
+                    employee: obj.employeeId,
                 }
             })
             return res.json({data});
@@ -62,19 +62,44 @@ export const getPayslips = async (req, res) => {
 // GET /api/payslips/:id
 export const getPayslipId = async (req, res) => {
     try {
-        const payslip = await Payslip.findById(req.params.id).populate('employeeId').lean();
+        const session = req.session;
 
-        if(!payslip) return res.status(404).json({error: "Not found"});
+        const payslip = await Payslip.findById(req.params.id)
+            .populate("employeeId")
+            .lean();
+
+        if (!payslip) {
+            return res.status(404).json({ error: "Not found" });
+        }
+
+        // Security check
+        if (session.role !== "ADMIN") {
+            const employee = await Employee.findOne({
+                userId: session.userId,
+            });
+
+            if (
+                !employee ||
+                payslip.employeeId._id.toString() !== employee._id.toString()
+            ) {
+                return res.status(403).json({
+                    error: "Forbidden",
+                });
+            }
+        }
 
         const result = {
             ...payslip,
             id: payslip._id.toString(),
             employee: payslip.employeeId,
-        }
-        return res.json({result})
+        };
+
+        return res.json({ result });
 
     } catch (error) {
-        return res.status(500).json({error: "Failed"});
+        console.error("Get Payslip Error:", error);
+        return res.status(500).json({
+            error: "Failed",
+        });
     }
-    
 }
