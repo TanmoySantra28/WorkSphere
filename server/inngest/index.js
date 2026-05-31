@@ -128,7 +128,7 @@ const attendaceReminderCron = inngest.createFunction(
         const activeEmployees = await step.run("get-active-employees", async ()=> {
             const employees = await Employee.find({
                 isDeleted: false,
-                employmentStatus: "ACTIVE",
+                employeeStatus: "ACTIVE",
             }).lean();
             return employees.map((e)=>({_id: e._id.toString(), firstName: e.firstName, lastName: e.lastName, email: e.email, department: e.department}))
         })
