@@ -24,7 +24,7 @@ A full-stack Employee Management System built with React and Node.js, enabling o
 - [Background Jobs and Automation](#background-jobs-and-automation)
 - [Screenshots](#screenshots)
 - [Security Considerations](#security-considerations)
-- [License](#license)
+- [Author](#Author)
 
 ---
 
